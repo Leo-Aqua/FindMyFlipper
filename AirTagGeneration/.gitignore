@@ -3,3 +3,4 @@ LocationMap_*.html
 venv/
 keys/*
 __pycache__
+.venv
