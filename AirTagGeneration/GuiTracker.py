@@ -56,6 +56,8 @@ class AniDialog(QtWidgets.QDialog):
         return self.urlLineEdit.text()
 
 
+# TODO Show parameters on sidepanel
+# TODO Disable Update Repurts button when active
 class FindMyFlipperUi(QtWidgets.QMainWindow):
     def __init__(self):
         super(FindMyFlipperUi, self).__init__()
@@ -82,8 +84,10 @@ class FindMyFlipperUi(QtWidgets.QMainWindow):
             ordered.sort(key=lambda item: item.get("timestamp"))
             for rep in ordered:
                 print(rep)
+                self.setStatusTip(str(rep))
 
             RRM.export_data(ordered)
+            self.setStatusTip("Generating map...")
             maphtml = RRM.generate_map()
 
             web_view = QtWebEngineWidgets.QWebEngineView()
@@ -92,22 +96,34 @@ class FindMyFlipperUi(QtWidgets.QMainWindow):
             frame_layout = QtWidgets.QVBoxLayout()
             self.ui.map_frame.setLayout(frame_layout)
             frame_layout.addWidget(web_view)
+            web_view.resize(self.ui.map_frame.size())
+            self.setStatusTip("Done!")
 
             missing = [key for key in names.values() if key not in found]
             print(f"found: {list(found)}")
             print(f"missing: {missing}")
+            self.setStatusTip(f"Found: {str(found)} missing: {str(missing)}")
 
         else:
             print("Failed to fetch reports. Status code:", response.status_code)
+            self.setStatusTip(
+                "Failed to fetch reports. Status code: " + str(response.status_code)
+            )
 
     def openAniDialog(self):
         dlg = AniDialog()
         if dlg.exec() == QtWidgets.QDialog.Accepted:
             cores.pypush_gsa_icloud.ANISETTE_URL = dlg.get_url_value()
             print("New Anisette server is: " + cores.pypush_gsa_icloud.ANISETTE_URL)
+            self.setStatusTip(
+                "New Anisette server is: " + cores.pypush_gsa_icloud.ANISETTE_URL
+            )
         else:
             print(
-                f"Anisette server didn't change ({cores.pypush_gsa_icloud.ANISETTE_URL})"
+                "Anisette server didn't change " + cores.pypush_gsa_icloud.ANISETTE_URL
+            )
+            self.setStatusTip(
+                "Anisette server didn't change " + cores.pypush_gsa_icloud.ANISETTE_URL
             )
 
     ######### Modified functions #########
@@ -160,8 +176,7 @@ class FindMyFlipperUi(QtWidgets.QMainWindow):
             if ok and user_input:
                 username = user_input
                 print(f"Apple ID: {username}")
-            else:
-                ...  # TODO Handle pressing cancel
+
         if not password:
             user_input, ok = QtWidgets.QInputDialog.getText(
                 self, "Login", "Password", echo=QtWidgets.QLineEdit.EchoMode.Password
@@ -169,8 +184,6 @@ class FindMyFlipperUi(QtWidgets.QMainWindow):
             if ok and user_input:
                 password = user_input
                 print(f"Password submitted: {password!=""}")
-            else:
-                ...  # TODO Handle pressing cancel
 
         g = self.gsa_authenticate(username, password, second_factor)
         pet = g["t"]["com.apple.gs.idms.pet"]["token"]
@@ -211,6 +224,11 @@ class FindMyFlipperUi(QtWidgets.QMainWindow):
         )
         if "sp" not in r:
             print("Authentication Failed. Check your Apple ID and password.")
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Error",
+                "Authentication Failed. Check your Apple ID and password.",
+            )
             raise Exception("AuthenticationError")
         if r["sp"] != "s2k" and r["sp"] != "s2k_fo":
             print(
@@ -307,8 +325,6 @@ class FindMyFlipperUi(QtWidgets.QMainWindow):
         if ok and user_input:
             code = user_input
             print(f"2FA code submitted: {code!=""}")
-        else:
-            ...  # TODO Handle pressing cancel
 
         body["securityCode"] = {"code": code}
 
