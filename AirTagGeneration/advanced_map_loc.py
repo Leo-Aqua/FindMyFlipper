@@ -60,7 +60,12 @@ def generate_map(
     save,
 ):
     map_center = [df.iloc[0]["lat"], df.iloc[0]["lon"]]
-    m = folium.Map(location=map_center, zoom_start=13)
+    m = folium.Map(
+        location=map_center,
+        zoom_start=13,
+        tiles="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+        attr="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors &copy; <a href='https://carto.com/'>CARTO</a>",
+    )
 
     latlon_pairs = list(zip(df["lat"], df["lon"]))
     ant_path = AntPath(
@@ -97,16 +102,21 @@ def generate_map(
             ).add_to(m)
 
     title_and_info_html = f"""
-     <h3 align="center" style="font-size:20px; margin-top:10px;"><b>FindMy Flipper Location Mapper</b></h3>
-     <div style="position: fixed; bottom: 50px; left: 50px; width: 300px; height: 160px; z-index:9999; font-size:14px; background-color: white; padding: 10px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.5);">
-     <b>Location Summary</b><br>
-     Start: {start_timestamp}<br>
-     End: {end_timestamp}<br>
-     Number of Location Pings: {ping_count}<br>
-     Total Time: {formatted_total_time}<br>
-     Average Time Between Pings: {formatted_avg_time}<br>
-     Created by Matthew KuKanich and luu176<br>
-     </div>
+<body style="background-color: #121212; color: white;">
+
+    <h3 align="center" style="font-size:20px; margin-top:10px; color: white;"><b>FindMy Flipper Location Mapper</b></h3>
+    <div style="position: fixed; bottom: 50px; left: 50px; width: 300px; height: 160px; z-index:9999; font-size:14px; background-color: #2e2e2e; padding: 10px; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.5); color: white;">
+        <b>Location Summary</b><br>
+        Start: {start_timestamp}<br>
+        End: {end_timestamp}<br>
+        Number of Location Pings: {ping_count}<br>
+        Total Time: {formatted_total_time}<br>
+        Average Time Between Pings: {formatted_avg_time}<br>
+        Created by Matthew KuKanich and luu176<br>
+    </div>
+
+</body>
+
      """
     m.get_root().html.add_child(folium.Element(title_and_info_html))
     if save:
