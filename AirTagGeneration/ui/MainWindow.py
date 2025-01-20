@@ -42,7 +42,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.map_frame.sizePolicy().hasHeightForWidth())
         self.map_frame.setSizePolicy(sizePolicy)
-        self.map_frame.setFrameShape(QFrame.Box)
+        self.map_frame.setFrameShape(QFrame.StyledPanel)
         self.map_frame.setFrameShadow(QFrame.Raised)
 
         self.horizontalLayout_2.addWidget(self.map_frame)
