@@ -15,8 +15,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cores.pypush_gsa_icloud import icloud_login_mobileme, generate_anisette_headers
 import cores.pypush_gsa_icloud
-
-script_name = "advanced_map_loc.py"
+import advanced_map_loc
 
 cores.pypush_gsa_icloud.ANISETTE_URL = "https://ani.sidestore.io"
 
@@ -212,14 +211,13 @@ def export_data(ordered):
 
 
 def generate_map():
-    result = subprocess.run(["python", script_name], capture_output=True, text=True)
-    if result.returncode == 0:
-        print("Script ran successfully!")
-        return result.stdout
+    result = advanced_map_loc.main("data.json")
+    if result:
+        print("The map script ran successfully!")
+        return result
     else:
-        print("Script encountered an error.")
-        print("Error:", result.stderr)
-        return result.stderr
+        print("The map script encountered an error.")
+        return "No data available"
 
 
 def main():
