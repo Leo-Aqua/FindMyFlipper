@@ -13,30 +13,52 @@ def format_time(seconds):
     return f"{int(hours)}h {int(minutes)}m {int(seconds)}s"
 
 
-with open("data.json", "r") as file:
-    data = json.load(file)
+def process_location_data(file_path):
+    with open(file_path, "r") as file:
+        data = json.load(file)
+
+    sorted_data = sorted(data, key=lambda x: x["timestamp"])
+    df = pd.DataFrame(sorted_data)
+
+    df["datetime"] = pd.to_datetime(df["isodatetime"])
+    df["time_diff"] = df["datetime"].diff().dt.total_seconds()
+
+    if df.empty:
+        return {"error": "No data available to process."}
+
+    average_time_diff = df["time_diff"][1:].mean()
+    time_diff_total = (df.iloc[-1]["datetime"] - df.iloc[0]["datetime"]).total_seconds()
+
+    formatted_total_time = format_time(time_diff_total)
+    formatted_avg_time = format_time(average_time_diff)
+
+    start_timestamp = df.iloc[0]["datetime"].strftime("%Y-%m-%d %H:%M:%S")
+    simple_start_timestamp = df.iloc[0]["datetime"].strftime("%m-%d-%y")
+    end_timestamp = df.iloc[-1]["datetime"].strftime("%Y-%m-%d %H:%M:%S")
+
+    ping_count = df.shape[0]
+
+    return {
+        "df": df,
+        "start_timestamp": start_timestamp,
+        "end_timestamp": end_timestamp,
+        "simple_start_timestamp": simple_start_timestamp,
+        "ping_count": ping_count,
+        "formatted_total_time": formatted_total_time,
+        "formatted_avg_time": formatted_avg_time,
+    }
 
 
-sorted_data = sorted(data, key=lambda x: x["timestamp"])
-
-df = pd.DataFrame(sorted_data)
-
-df["datetime"] = pd.to_datetime(df["isodatetime"])
-df["time_diff"] = df["datetime"].diff().dt.total_seconds()
-average_time_diff = df["time_diff"][1:].mean()
-time_diff_total = (df.iloc[-1]["datetime"] - df.iloc[0]["datetime"]).total_seconds()
-
-formatted_total_time = format_time(time_diff_total)
-formatted_avg_time = format_time(average_time_diff)
-
-start_timestamp = df.iloc[0]["datetime"].strftime("%Y-%m-%d %H:%M:%S")
-simple_start_timestamp = df.iloc[0]["datetime"].strftime("%m-%d-%y")
-end_timestamp = df.iloc[-1]["datetime"].strftime("%Y-%m-%d %H:%M:%S")
-
-ping_count = df.shape[0]
-
-# sanity check before plotting
-if not df.empty:
+def generate_map(
+    df,
+    start_timestamp,
+    end_timestamp,
+    ping_count,
+    formatted_total_time,
+    formatted_avg_time,
+    simple_start_timestamp,
+    save,
+):
     map_center = [df.iloc[0]["lat"], df.iloc[0]["lon"]]
     m = folium.Map(location=map_center, zoom_start=13)
 
@@ -87,16 +109,41 @@ if not df.empty:
      </div>
      """
     m.get_root().html.add_child(folium.Element(title_and_info_html))
+    if save:
+        base_filename = f"LocationMap_{simple_start_timestamp}"
+        extension = "html"
+        counter = 1
+        filename = f"{base_filename}.{extension}"
+        while os.path.exists(filename):
+            filename = f"{base_filename}_{counter}.{extension}"
+            counter += 1
 
-    base_filename = f"LocationMap_{simple_start_timestamp}"
-    extension = "html"
-    counter = 1
-    filename = f"{base_filename}.{extension}"
-    while os.path.exists(filename):
-        filename = f"{base_filename}_{counter}.{extension}"
-        counter += 1
+        m.save(filename)
+    return m.get_root().render()  # Return HTML
 
-    m.save(filename)
-    print(m.render())
-else:
-    print("<h1>No data available to plot.</h1>")
+
+def main(file_path, save=True):
+    location_data = process_location_data(file_path)
+
+    if "error" in location_data:
+        return None
+
+    df = location_data["df"]
+    html = generate_map(
+        df,
+        location_data["start_timestamp"],
+        location_data["end_timestamp"],
+        location_data["ping_count"],
+        location_data["formatted_total_time"],
+        location_data["formatted_avg_time"],
+        location_data["simple_start_timestamp"],
+        save=save,
+    )
+
+    return html
+
+
+# Example usage
+# if __name__ == "__main__":
+#     result = main("data.json")
+#     print(result)
