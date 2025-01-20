@@ -88,7 +88,7 @@ Use the ```request_reports.py``` script to request real-time location data, requ
 
 ### 10. Generate an Advanced Location Map
 
-Finally, run the ```RequestReport&Map.py``` script to generate an interactive map of all location data in the past 24 hours. This script automates the process by requesting the location report using the hashed adv key in your ```keys``` folder, then decrypting that data from your private key located in the same `.keys` file. After the data is decrypted it will be displayed in the terminal. It then launches a mapping script that maps all the coordinates, connects them to show movement, displays a plethora of location metadata, and saves to an html file named by the date of the report.
+Finally, run the ```RequestReportMap.py``` script to generate an interactive map of all location data in the past 24 hours. This script automates the process by requesting the location report using the hashed adv key in your ```keys``` folder, then decrypting that data from your private key located in the same `.keys` file. After the data is decrypted it will be displayed in the terminal. It then launches a mapping script that maps all the coordinates, connects them to show movement, displays a plethora of location metadata, and saves to an html file named by the date of the report.
 
 You're done!
 
