@@ -65,8 +65,8 @@ class FindMyFlipperUi(QtWidgets.QMainWindow):
         self.args = SimpleNamespace()
         self.args.hours = 24
         self.args.prefix = ""
-        self.args.regen = "store_true"
-        self.args.trusteddevice = "store_true"
+        self.args.regen = False
+        self.args.trusteddevice = False  # TODO add ui for changing these
 
         self.ui.actionSelect_Anisette_server.triggered.connect(self.openAniDialog)
         self.ui.updateReports_pushButton.clicked.connect(self.main)
@@ -84,11 +84,19 @@ class FindMyFlipperUi(QtWidgets.QMainWindow):
                 print(rep)
 
             RRM.export_data(ordered)
-            self.map = RRM.generate_map()
+            maphtml = RRM.generate_map()
+
+            web_view = QtWebEngineWidgets.QWebEngineView()
+            web_view.setHtml(maphtml)
+
+            frame_layout = QtWidgets.QVBoxLayout()
+            self.ui.map_frame.setLayout(frame_layout)
+            frame_layout.addWidget(web_view)
 
             missing = [key for key in names.values() if key not in found]
             print(f"found: {list(found)}")
             print(f"missing: {missing}")
+
         else:
             print("Failed to fetch reports. Status code:", response.status_code)
 
